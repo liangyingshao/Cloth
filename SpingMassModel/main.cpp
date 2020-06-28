@@ -1,19 +1,20 @@
-#include "ropesimulator.h"
 #include "cloth.h"
 #include <GL/glut.h>
 //#include <Eigen/Core>
 #include<iostream>
 using namespace std;
 
-bool sphere_cube=false;//true-sphere,false-cube
-bool line = true;
-bool spot = false;
-bool drawCloth = false;
+bool sphere_cube=true;//true-sphere,false-cube
+bool line = false;
+bool spot = true;
+bool drawCloth = true;
+bool wind = false;
 cloth myCloth;
 GLint viewport[4];
 GLdouble PP[16];
-float radius = 5.0f;
+float radius = 4.0f;
 float cubeSize =7.0f;
+GLuint floorTexture;
 
 void vec3Tofloat(glm::vec3 v, GLfloat* arr)
 {
@@ -26,6 +27,25 @@ void init(void)
 {
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glShadeModel(GL_SMOOTH);
+}
+
+void texture()
+{
+	/*IMAGE floorImage;
+	if (!floorImage.Load("floor.tga"))
+		return false;
+	if (floorImage.paletted)
+		floorImage.ExpandPalette();
+
+	glGenTextures(1, &floorTexture);
+	glBindTexture(GL_TEXTURE_2D, floorTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA8, floorImage.width, floorImage.height,
+		floorImage.format, GL_UNSIGNED_BYTE, floorImage.data);*/
 }
 
 void display()
@@ -55,18 +75,16 @@ void display()
 	}
 	//设置材质
 	{
-		//银
-		//GLfloat mat_ambient[] = { 0.192250f, 0.192250, 0.192250, 1.0f };//多次反射
-		//GLfloat mat_diffuse[] = { 0.507540f, 0.507540f, 0.507540f, 1.0f };//漫反射
-		//GLfloat mat_specular[] = { 0.508273f, 0.508273f, 0.508273f, 1.0f };//镜面反射
-		//GLfloat mat_shininess = 51.200001f;
 
 		//珍珠
 		//GLfloat mat_ambient[] = { 0.250000, 0.207250, 0.207250, 0.922000 };//多次反射
 		//GLfloat mat_diffuse[] = { 1.0, 0.829, 0.829, 0.922000 };//漫反射
 		//GLfloat mat_specular[] = { 0.296648, 0.296648, 0.296648, 0.922000 };//镜面反射
 		//GLfloat mat_shininess = 11.264000;
-
+ 
+	}
+	if (sphere_cube)
+	{
 		//黑曜石
 		GLfloat mat_ambient[] = { 0.053750, 0.05, 0.066250, 0.82 };//多次反射
 		GLfloat mat_diffuse[] = { 0.182750, 0.17, 0.225250, 0.82 };//漫反射
@@ -76,16 +94,25 @@ void display()
 		glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 		glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-		glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess); 
-	}
-	if (sphere_cube)
-	{
+		glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess);
+
 		static GLUquadricObj* sphere = gluNewQuadric();
 		gluSphere(sphere, 0.99*radius, 48, 48);//为了不发生穿越事件
 	}
 	else
 	{
-		glutSolidCube(cubeSize*0.97);
+		//银
+		GLfloat mat_ambient[] = { 0.192250f, 0.192250, 0.192250, 1.0f };//多次反射
+		GLfloat mat_diffuse[] = { 0.507540f, 0.507540f, 0.507540f, 1.0f };//漫反射
+		GLfloat mat_specular[] = { 0.508273f, 0.508273f, 0.508273f, 1.0f };//镜面反射
+		GLfloat mat_shininess = 51.200001f;
+
+		glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+		glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess);
+
+		glutSolidCube(cubeSize*0.95);
 	}
 
 	//设置材质
@@ -242,7 +269,7 @@ void keyboard(unsigned char key, int x, int y)
 		{
 			for (int j = 0; j < MASS_NUM; j++)
 			{
-				myCloth.getMass(i,j)->setPos(glm::vec3((i * 0.2 - 5.0), 9, float(j) * 0.2 - 5.0f));
+				myCloth.getMass(i,j)->setPos(glm::vec3((i * 0.5 - 5.0), 9, float(j) * 0.5 - 5.0f));
 				myCloth.getMass(i, j)->setVel(glm::vec3(0, 0, 0));
 				if (i == 0 && j == 0)
 					myCloth.getMass(i, j)->setFixed(true);
@@ -264,6 +291,8 @@ void keyboard(unsigned char key, int x, int y)
 		spot=!spot; break;
 	case 'c':
 		drawCloth = !drawCloth; break;
+	case 'w':
+		wind = !wind; break;
 	}
 }
 

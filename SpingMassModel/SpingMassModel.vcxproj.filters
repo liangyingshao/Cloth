@@ -21,9 +21,6 @@
     <ClInclude Include="spring.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ropesimulator.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="cloth.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -32,16 +29,10 @@
     <ClCompile Include="mass.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ropesimulator.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="spring.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="源.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -2,6 +2,7 @@
 extern float radius;
 extern float cubeSize;
 extern bool sphere_cube;
+float collisionFactor = 0.6;
 glm::vec3 cubeNormals[6] = {
     glm::vec3(0,1,0),glm::vec3(0,-1,0),//上下
     glm::vec3(0.0f,0.0f,1.0f),glm::vec3(0.0f,0.0f,-1.0f),//前后
@@ -36,15 +37,15 @@ void Mass::simulate(float dt)
 {
     if (this->fixed)
         return;
+    glm::vec3 oldVel = vel;
     //Velocity Verlet
     vel = vel + (lastForce + force) / (m*2) * lastTime;//首先更新当前速度
-    glm::vec3 oldVel=vel;
     glm::vec3 newPos = pos+vel*dt+ 0.5f * (force / m) * dt * dt;
     glm::vec3 newVel = vel+(force / m) * dt;//这是当前时间加上dt后的预测速度
     //显式欧拉
-    /*newVel = vel + (force / m) * dt;
-    newPos = pos + newVel * dt;*/
-
+    /*glm::vec3 newVel = vel + (force / m) * dt;
+    glm::vec3 newPos = pos + newVel * dt;*/
+    
     if (glm::length(newPos) < radius&& sphere_cube)                          //判断是否与球碰撞
     {
         float high = dt;
@@ -67,10 +68,10 @@ void Mass::simulate(float dt)
         //vel += (force / m) * time;
         pos = glm::normalize(pos+vel*time) * radius;                                  //将质点移动到球的表面
         vel = vel - 2.0f * (glm::dot(vel+ (force / m) * time, glm::normalize(newPos))) * glm::normalize(newPos);   //碰撞后，速度镜像反射
-        vel *= 0.9;//碰撞速度损失
+        vel *= collisionFactor;//碰撞速度损失
         collision = glm::dot((vel - oldVel), glm::normalize(pos)) * glm::normalize(pos) * m;//有发现方向上的速度变化才会有碰撞力
     }
-    else if (newPos.x<=a&& newPos.x>=-a&& newPos.y<=b&& newPos.y>=-b&& newPos.z<=c&& newPos.z>=-c&&!sphere_cube)     //与cube相撞
+    else if (newPos.x<a&& newPos.x>-a&& newPos.y<b&& newPos.y>-b&& newPos.z<c&& newPos.z>-c&&!sphere_cube)     //与cube相撞
     {
         float timeArr[6];
         if (abs(b - pos.y) < 0.001)
@@ -79,6 +80,9 @@ void Mass::simulate(float dt)
             timeArr[0] = 0;
             lastTime = 0;
             faceIndex = 0;
+            vel = collisionFactor * (vel - 2.0f * (glm::dot(vel, cubeNormals[faceIndex])) * glm::normalize(cubeNormals[faceIndex]));
+            collision = glm::dot((vel - oldVel), cubeNormals[faceIndex]) * cubeNormals[faceIndex] * m;
+            return;
         }
         else
             timeArr[0] = (b - pos.y) / newVel.y;
@@ -88,6 +92,9 @@ void Mass::simulate(float dt)
             timeArr[1] = 0;
             lastTime = 0;
             faceIndex = 1;
+            vel = collisionFactor * (vel - 2.0f * (glm::dot(vel, cubeNormals[faceIndex])) * glm::normalize(cubeNormals[faceIndex]));
+            collision = glm::dot((vel - oldVel), cubeNormals[faceIndex]) * cubeNormals[faceIndex] * m;
+            return;
         }
         else
             timeArr[1] = (-b - pos.y) / newVel.y;
@@ -97,6 +104,9 @@ void Mass::simulate(float dt)
             timeArr[2] = 0;
             lastTime = 0;
             faceIndex = 2;
+            vel = collisionFactor * (vel - 2.0f * (glm::dot(vel, cubeNormals[faceIndex])) * glm::normalize(cubeNormals[faceIndex]));
+            collision = glm::dot((vel - oldVel), cubeNormals[faceIndex]) * cubeNormals[faceIndex] * m;
+            return;
         }
         else
             timeArr[2] = (c - pos.z) / newVel.z;
@@ -106,6 +116,9 @@ void Mass::simulate(float dt)
             timeArr[3] = 0;
             lastTime = 0;
             faceIndex = 3;
+            vel = collisionFactor * (vel - 2.0f * (glm::dot(vel, cubeNormals[faceIndex])) * glm::normalize(cubeNormals[faceIndex]));
+            collision = glm::dot((vel - oldVel), cubeNormals[faceIndex]) * cubeNormals[faceIndex] * m;
+            return;
         }
         else
             timeArr[3] = (-c - pos.z) / newVel.z;
@@ -115,6 +128,9 @@ void Mass::simulate(float dt)
             timeArr[4] = 0;
             lastTime = 0;
             faceIndex = 4;
+            vel = collisionFactor * (vel - 2.0f * (glm::dot(vel, cubeNormals[faceIndex])) * glm::normalize(cubeNormals[faceIndex]));
+            collision = glm::dot((vel - oldVel), cubeNormals[faceIndex]) * cubeNormals[faceIndex] * m;
+            return;
         }
         else
             timeArr[4] = (-a - pos.x) / newVel.x;
@@ -124,6 +140,9 @@ void Mass::simulate(float dt)
             timeArr[5] = 0;
             lastTime = 0;
             faceIndex = 5;
+            vel = collisionFactor * (vel - 2.0f * (glm::dot(vel, cubeNormals[faceIndex])) * glm::normalize(cubeNormals[faceIndex]));
+            collision = glm::dot((vel - oldVel), cubeNormals[faceIndex]) * cubeNormals[faceIndex] * m;
+            return;
         }
         else
             timeArr[5] = (a - pos.x) / newVel.x;
@@ -141,17 +160,20 @@ void Mass::simulate(float dt)
                 index = i;
             }
         }
-        if (timeArr[index] > dt)
+        if (timeArr[index] < 0 || timeArr[index] > dt)
         {
             lastTime = 0;
             timeArr[index] = 0;
         }
         faceIndex = index;
+        pos.x = timeArr[index] * newVel.x + pos.x;
+        pos.y = timeArr[index] * newVel.y + pos.y;
+        pos.z = timeArr[index] * newVel.z + pos.z;
         
         //lastTime = timeArr[index];
         //pos += newVel * timeArr[index];//后面考虑移到表面
         ////vel += (force / m) * timeArr[index]; 
-        vel = 0.01f * (vel - 2.0f * (glm::dot(vel, cubeNormals[index])) * glm::normalize(cubeNormals[index]));
+        vel = collisionFactor * (vel - 2.0f * (glm::dot(vel, cubeNormals[index])) * glm::normalize(cubeNormals[index]));
         collision = glm::dot((vel - oldVel), cubeNormals[index]) * cubeNormals[index] * m;
     }
     else

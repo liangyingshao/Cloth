@@ -1,2 +1,11 @@
-﻿  mass.cpp
+﻿  main.cpp
+C:\Users\selining\source\repos\SpingMassModel\SpingMassModel\cloth.h(9,27): warning C4305: “初始化”: 从“double”到“float”截断
+C:\Users\selining\source\repos\SpingMassModel\SpingMassModel\main.cpp(89,60): warning C4305: “初始化”: 从“double”到“GLfloat”截断
+C:\Users\selining\source\repos\SpingMassModel\SpingMassModel\main.cpp(90,60): warning C4305: “初始化”: 从“double”到“GLfloat”截断
+C:\Users\selining\source\repos\SpingMassModel\SpingMassModel\main.cpp(91,65): warning C4305: “初始化”: 从“double”到“GLfloat”截断
+C:\Users\selining\source\repos\SpingMassModel\SpingMassModel\main.cpp(92,36): warning C4305: “初始化”: 从“double”到“GLfloat”截断
+C:\Users\selining\source\repos\SpingMassModel\SpingMassModel\main.cpp(105,65): warning C4305: “初始化”: 从“double”到“GLfloat”截断
+C:\Users\selining\source\repos\SpingMassModel\SpingMassModel\main.cpp(127,51): warning C4305: “初始化”: 从“double”到“GLfloat”截断
+C:\Users\selining\source\repos\SpingMassModel\SpingMassModel\main.cpp(128,52): warning C4305: “初始化”: 从“double”到“GLfloat”截断
+C:\Users\selining\source\repos\SpingMassModel\SpingMassModel\main.cpp(255,44): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
   SpingMassModel.vcxproj -> C:\Users\selining\source\repos\SpingMassModel\Debug\SpingMassModel.exe

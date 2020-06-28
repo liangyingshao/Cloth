@@ -3,13 +3,13 @@
 #include "spring.h"
 #include <iostream>
 extern float radius;
-extern bool sphere_cube;
+extern bool sphere_cube,wind;
 extern float a, b, c;
 extern glm::vec3 cubeNormals[6];
 float sphereFriction = 0.1;
 bool fisrt_pos = true;
 
-#define MASS_NUM 50
+#define MASS_NUM 20
 class cloth
 {
 public:
@@ -26,22 +26,22 @@ public:
 			for (int j = 0; j < MASS_NUM; j++)
 			{
 				masses[i][j] = new Mass();
-				masses[i][j]->setPos(glm::vec3((i * 0.2 - 5.0), 9, float(j) * 0.2 - 5.0f));
+				masses[i][j]->setPos(glm::vec3((i * 0.5 - 5.0), 9, float(j) * 0.5 - 5.0f));
 				masses[i][j]->setNormal(glm::vec3(0,1,0));
-				/*if (i == 0 && j == 0)
+				if (i == 0 && j == 0)
 					masses[i][j]->setFixed(true);
 				else if(j==0&&i==MASS_NUM-1)
 					masses[i][j]->setFixed(true);
 				else if(i == MASS_NUM - 1 && j == MASS_NUM - 1)
 					masses[i][j]->setFixed(true);
 				else if (i == 0 && j == MASS_NUM - 1)
-					masses[i][j]->setFixed(true);*/
+					masses[i][j]->setFixed(true);
 			}
 		}
 
 		//生成弹簧
 		springs = new Spring*** [MASS_NUM];
-		float length = 0.2f;
+		float length = 0.5f;
 		for (int i = 0; i < MASS_NUM; i++)
 		{
 			springs[i] = new Spring * *[MASS_NUM];
@@ -167,14 +167,16 @@ public:
 		{
 			for (int j = 0; j < MASS_NUM; j++)
 			{
-				masses[i][j]->applyForce(gravitation * masses[i][j]->getM());
-				//masses[i][j]->applyForce(glm::vec3(0, 0, 0.08));//风力,向屏幕外吹的风
+				masses[i][j]->applyForce(gravitation * masses[i][j]->getM());//重力
+				if (wind)
+				{
+					masses[i][j]->applyForce(glm::vec3(0.2, 0, 0));//风力,向屏幕外吹的风
+				}
 				
 				//碰撞：立方体、球
 				
 				if (sphere_cube)		//如果与球碰撞，应该加上支持力、摩擦力、（冲量定理）碰撞力
 				{
-					//float check = glm::length(masses[i][j]->getPos());
 					if (abs(glm::length(masses[i][j]->getPos()) - radius) < 5e-3)
 					{
 						glm::vec3 N = masses[i][j]->getM() * abs(glm::dot(gravitation, glm::normalize(masses[i][j]->getPos())))
@@ -194,23 +196,44 @@ public:
 						&& masses[i][j]->getPos().z<=c && masses[i][j]->getPos().z>=-c)
 					{
 						//int checkIndex = masses[i][j]->getIndex();
-						glm::vec3 N = abs(glm::dot(masses[i][j]->getM()*gravitation, cubeNormals[masses[i][j]->getIndex()]))*
-						  cubeNormals[masses[i][j]->getIndex()];
-						masses[i][j]->applyForce(N);					//支持力
-						glm::vec3 f = glm::normalize(masses[i][j]->getM() * gravitation - N)
-						  * sphereFriction * glm::length(N);
-						masses[i][j]->applyForce(f);					//摩擦力
+						if (masses[i][j]->getIndex() < 2 && masses[i][j]->getForce().y * (cubeNormals[masses[i][j]->getIndex()]).y < 0
+							|| masses[i][j]->getIndex() < 4 && masses[i][j]->getForce().z * (cubeNormals[masses[i][j]->getIndex()]).z < 0
+							|| masses[i][j]->getIndex() < 6 && masses[i][j]->getForce().x * (cubeNormals[masses[i][j]->getIndex()]).x < 0)
+						{
+							glm::vec3 N = -(glm::dot(masses[i][j]->getForce(), cubeNormals[masses[i][j]->getIndex()])) *
+								cubeNormals[masses[i][j]->getIndex()];
+							masses[i][j]->applyForce(N);					//支持力
+							//glm::vec3 f = glm::normalize(masses[i][j]->getM() * gravitation - N)
+							//	* sphereFriction * glm::length(N);
+							//masses[i][j]->applyForce(f);					//摩擦力
+							if (masses[i][j]->getIndex() < 2)
+							{
+								masses[i][j]->applyForce(glm::vec3(masses[i][j]->getVel().x / masses[i][j]->getVel().x * -1.0f * glm::length(N) * sphereFriction, 0, 0));
+								masses[i][j]->applyForce(glm::vec3(0, 0, masses[i][j]->getVel().z / masses[i][j]->getVel().z * -1.0f * glm::length(N) * sphereFriction));
+							}
+							else if (masses[i][j]->getIndex() < 4)
+							{
+								masses[i][j]->applyForce(glm::vec3(masses[i][j]->getVel().x / masses[i][j]->getVel().x * -1.0f * glm::length(N) * sphereFriction, 0, 0));
+								masses[i][j]->applyForce(glm::vec3(0, masses[i][j]->getVel().y / masses[i][j]->getVel().y * -1.0f * glm::length(N) * sphereFriction, 0));
+							}
+							else if (masses[i][j]->getIndex() < 6)
+							{
+								masses[i][j]->applyForce(glm::vec3(0, masses[i][j]->getVel().y / masses[i][j]->getVel().y * -1.0f * glm::length(N) * sphereFriction, 0));
+								masses[i][j]->applyForce(glm::vec3(0, 0, masses[i][j]->getVel().z / masses[i][j]->getVel().z * -1.0f * glm::length(N) * sphereFriction));
+							}
+						}
 						masses[i][j]->applyForce(masses[i][j]->getCollision());	//冲力
 						masses[i][j]->setCollision(glm::vec3(0, 0, 0));
 					}
 				}
 			
+				//Verlet算法的残余物
 				//至此一个质点的受力计算完毕
 				//如果是第一个计算位置，那么给每个质点初始位置的前一位置赋值
-				if (fisrt_pos)
+				/*if (fisrt_pos)
 				{
 					masses[i][j]->setLastPos(masses[i][j]->getPos() + masses[i][j]->getForce() / masses[i][j]->getM() * dt * dt);
-				}
+				}*/
 			}
 		}
 		fisrt_pos = false;
@@ -218,7 +241,7 @@ public:
 	//计算经过delta t后每个质点的位置
 	void simulate(float t)
 	{
-		//计算位置和受力
+		//计算位置
 		for (int i = 0; i < MASS_NUM; i++)
 		{
 			for (int j = 0; j < MASS_NUM; j++)
