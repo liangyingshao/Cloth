@@ -182,7 +182,6 @@ void schedule(void)
 int sys_pause(void)
 {
 	current->state = TASK_INTERRUPTIBLE;
-	/*运行到可中断睡眠*/
 	if (current->pid != 0)
 		fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'W', jiffies);
 	schedule();
@@ -200,18 +199,15 @@ static inline void __sleep_on(struct task_struct **p, int state)
 	tmp = *p;
 	*p = current;
 
-	/*不区分可中断睡眠与不可中断睡眠*/
 	fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'W', jiffies);
 
 	current->state = state;
 repeat:	schedule();
 	if (*p && *p != current) {
 		(**p).state = 0;
-		/*日志记录，当前进程到就绪态*/
 		fprintk(3, "%d\t%c\t%d\n", (*p)->pid, 'J', jiffies);
 
 		current->state = TASK_UNINTERRUPTIBLE;
-		/*日志记录，当前进程到不可中断睡眠*/
 		fprintk(3, "%d\t%c\t%d\n", current->pid, 'W', jiffies);
 		goto repeat;
 	}
@@ -244,7 +240,6 @@ void wake_up(struct task_struct **p)
 		if ((**p).state == TASK_ZOMBIE)
 			printk("wake_up: TASK_ZOMBIE");
 		(**p).state = 0;
-		/*唤醒最后进入等待队列的进程*/
 		if ((*p)->state != TASK_RUNNING)
 			fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
 	}
