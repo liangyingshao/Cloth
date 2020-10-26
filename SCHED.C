@@ -223,9 +223,7 @@ repeat:	schedule();
 	{
 		tmp->state = 0;
 		/*begin*/
-		if (tmp->state != TASK_RUNNING) {
-			fprintk(3, "%ld\t%c\t%ld\n", tmp->pid, 'J', jiffies);
-		}
+		fprintk(3, "%ld\t%c\t%ld\n", tmp->pid, 'J', jiffies);
 		/*end*/
 	}
 }
@@ -249,8 +247,7 @@ void wake_up(struct task_struct **p)
 			printk("wake_up: TASK_ZOMBIE");
 		(**p).state = 0;
 		/*唤醒最后进入等待队列的进程*/
-		if ((*p)->state != TASK_RUNNING)
-			fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
+		fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
 		/*end*/
 	}
 }
