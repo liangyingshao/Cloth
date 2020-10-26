@@ -169,7 +169,7 @@ void schedule(void)
 	}
 
 	/*下一个进程进入运行态*/
-	if (task[next]->pid != current->pid) {
+	if (current->pid != task[next]->pid) {
 		/*超时，运行<--->就绪*/
 		if (current->state == TASK_RUNNING) {
 			fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'J', jiffies);
