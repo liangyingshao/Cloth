@@ -131,7 +131,7 @@ void schedule(void)
 				if ((*p)->state == TASK_INTERRUPTIBLE)
 				{
 					(*p)->state = TASK_RUNNING;
-					fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
+					fprintk(3, "%d\tJ\t%d\n", (*p)->pid, jiffies);
 				}
 			}
 			if ((*p)->alarm && (*p)->alarm < jiffies) {
@@ -143,7 +143,7 @@ void schedule(void)
 			{
 				(*p)->state = TASK_RUNNING;
 				/*可中断睡眠->就绪*/
-				fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
+				fprintk(3, "%d\tJ\t%d\n", (*p)->pid, jiffies);
 				/**/
 			}
 		}
@@ -172,8 +172,8 @@ void schedule(void)
 	if (current->pid != task[next]->pid) {
 		/*超时，运行<--->就绪*/
 		if (current->state == TASK_RUNNING)
-			fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'J', jiffies);
-		fprintk(3, "%ld\t%c\t%ld\n", task[next]->pid, 'R', jiffies);
+			fprintk(3, "%d\tJ\t%d\n", current->pid, jiffies);
+		fprintk(3, "%d\tR\t%d\n", task[next]->pid, jiffies);
 	}
 	/*下一个进程进入运行态*/
 	switch_to(next);
@@ -184,7 +184,7 @@ int sys_pause(void)
 	current->state = TASK_INTERRUPTIBLE;
 	/*运行->可中断睡眠*/
 	if (current->pid != 0)
-		fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'W', jiffies);
+		fprintk(3, "%d\tW\t%d\n", current->pid, jiffies);
 	/*end*/
 	schedule();
 	return 0;
@@ -202,7 +202,7 @@ static inline void __sleep_on(struct task_struct **p, int state)
 	*p = current;
 
 	/*begin：不区分可中断睡眠与不可中断睡眠*/
-	fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'W', jiffies);
+	fprintk(3, "%d\tW\t%d\n", current->pid, jiffies);
 	/*end*/
 
 	current->state = state;
@@ -210,11 +210,11 @@ repeat:	schedule();
 	if (*p && *p != current) {
 		(**p).state = 0;
 		/*日志记录 当前进程->就绪态*/
-		fprintk(3, "%d\t%c\t%d\n", (*p)->pid, 'J', jiffies);
+		fprintk(3, "%d\tJ\t%d\n", (*p)->pid, jiffies);
 
 		current->state = TASK_UNINTERRUPTIBLE;
 		/*日志记录 当前进程->不可中断睡眠*/
-		fprintk(3, "%d\t%c\t%d\n", current->pid, 'W', jiffies);
+		fprintk(3, "%d\tW\t%d\n", current->pid, jiffies);
 		goto repeat;
 	}
 	if (!*p)
@@ -223,7 +223,7 @@ repeat:	schedule();
 	{
 		tmp->state = 0;
 		/*begin*/
-		fprintk(3, "%ld\t%c\t%ld\n", tmp->pid, 'J', jiffies);
+		fprintk(3, "%d\tJ\t%d\n", tmp->pid, jiffies);
 		/*end*/
 	}
 }
@@ -247,7 +247,7 @@ void wake_up(struct task_struct **p)
 			printk("wake_up: TASK_ZOMBIE");
 		(**p).state = 0;
 		/*唤醒最后进入等待队列的进程*/
-		fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
+		fprintk(3, "%d\tJ\t%d\n", (*p)->pid, jiffies);
 		/*end*/
 	}
 }
