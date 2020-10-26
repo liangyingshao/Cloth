@@ -131,7 +131,7 @@ void schedule(void)
 				if ((*p)->state == TASK_INTERRUPTIBLE)
 				{
 					(*p)->state = TASK_RUNNING;
-					fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
+					fprintk(3, "%d\tJ\t%d\n", (*p)->pid, jiffies);
 				}
 			}
 			if ((*p)->alarm && (*p)->alarm < jiffies) {
@@ -142,10 +142,9 @@ void schedule(void)
 				(*p)->state == TASK_INTERRUPTIBLE)
 			{
 				(*p)->state = TASK_RUNNING;
-				/*可中断睡眠->就绪*/
-				fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
-				/**/
+				fprintk(3, "%d\tJ\t%d\n", (*p)->pid, jiffies);
 			}
+
 		}
 
 	/* this is the scheduler proper: */
@@ -167,15 +166,12 @@ void schedule(void)
 				(*p)->counter = ((*p)->counter >> 1) +
 				(*p)->priority;
 	}
-
-	/*下一个进程进入运行态*/
-	if (current->pid != task[next]->pid) {
-		/*超时，运行<--->就绪*/
+	if (current->pid != task[next]->pid)
+	{
 		if (current->state == TASK_RUNNING)
-			fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'J', jiffies);
-		fprintk(3, "%ld\t%c\t%ld\n", task[next]->pid, 'R', jiffies);
+			fprintk(3, "%d\tJ\t%d\n", current->pid, jiffies);
+		fprintk(3, "%d\tR\t%d\n", task[next]->pid, jiffies);
 	}
-	/*下一个进程进入运行态*/
 	switch_to(next);
 }
 
@@ -183,7 +179,7 @@ int sys_pause(void)
 {
 	current->state = TASK_INTERRUPTIBLE;
 	if (current->pid != 0)
-		fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'W', jiffies);
+		fprintk(3, "%d\tW\t%d\n", current->pid, jiffies);
 	schedule();
 	return 0;
 }
@@ -198,17 +194,15 @@ static inline void __sleep_on(struct task_struct **p, int state)
 		panic("task[0] trying to sleep");
 	tmp = *p;
 	*p = current;
-
-	fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'W', jiffies);
-
 	current->state = state;
+	fprintk(3, "%d\tW\t%d\n", current->pid, jiffies);
 repeat:	schedule();
 	if (*p && *p != current) {
 		(**p).state = 0;
-		fprintk(3, "%d\t%c\t%d\n", (*p)->pid, 'J', jiffies);
+		fprintk(3, "%d\tJ\t%d\n", (*p)->pid, jiffies);
 
 		current->state = TASK_UNINTERRUPTIBLE;
-		fprintk(3, "%d\t%c\t%d\n", current->pid, 'W', jiffies);
+		fprintk(3, "%d\tW\t%d\n", current->pid, jiffies);
 		goto repeat;
 	}
 	if (!*p)
@@ -216,10 +210,10 @@ repeat:	schedule();
 	if (*p = tmp)
 	{
 		tmp->state = 0;
-		if (tmp->state != TASK_RUNNING) {
-			fprintk(3, "%ld\t%c\t%ld\n", tmp->pid, 'J', jiffies);
-		}
+		fprintk(3, "%d\tJ\t%d\n", tmp->pid, jiffies);
+
 	}
+
 }
 
 void interruptible_sleep_on(struct task_struct **p)
@@ -240,8 +234,7 @@ void wake_up(struct task_struct **p)
 		if ((**p).state == TASK_ZOMBIE)
 			printk("wake_up: TASK_ZOMBIE");
 		(**p).state = 0;
-		if ((*p)->state != TASK_RUNNING)
-			fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
+		fprintk(3, "%d\tJ\t%d\n", (*p)->pid, jiffies);
 	}
 }
 
