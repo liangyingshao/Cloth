@@ -128,7 +128,8 @@ void schedule(void)
 		if (*p) {
 			if ((*p)->timeout && (*p)->timeout < jiffies) {
 				(*p)->timeout = 0;
-				if ((*p)->state == TASK_INTERRUPTIBLE) {
+				if ((*p)->state == TASK_INTERRUPTIBLE)
+				{
 					(*p)->state = TASK_RUNNING;
 					fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
 				}
@@ -138,13 +139,12 @@ void schedule(void)
 				(*p)->alarm = 0;
 			}
 			if (((*p)->signal & ~(_BLOCKABLE & (*p)->blocked)) &&
-				(*p)->state == TASK_INTERRUPTIBLE) {
-
+				(*p)->state == TASK_INTERRUPTIBLE)
+			{
+				(*p)->state = TASK_RUNNING;
 				/*可中断睡眠->就绪*/
 				fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
 				/**/
-
-				(*p)->state = TASK_RUNNING;
 			}
 		}
 
@@ -171,24 +171,21 @@ void schedule(void)
 	/*下一个进程进入运行态*/
 	if (current->pid != task[next]->pid) {
 		/*超时，运行<--->就绪*/
-		if (current->state == TASK_RUNNING) {
+		if (current->state == TASK_RUNNING)
 			fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'J', jiffies);
-		}
 		fprintk(3, "%ld\t%c\t%ld\n", task[next]->pid, 'R', jiffies);
 	}
 	/*下一个进程进入运行态*/
-
 	switch_to(next);
 }
 
 int sys_pause(void)
 {
-	/*运行->可中断睡眠*/
-	if (current->pid != 0) {
-		fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'W', jiffies);
-	}
-	/*end*/
 	current->state = TASK_INTERRUPTIBLE;
+	/*运行->可中断睡眠*/
+	if (current->pid != 0)
+		fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'W', jiffies);
+	/*end*/
 	schedule();
 	return 0;
 }
@@ -222,14 +219,14 @@ repeat:	schedule();
 	}
 	if (!*p)
 		printk("Warning: *P = NULL\n\r");
-	if (*p = tmp) {
+	if (*p = tmp)
+	{
+		tmp->state = 0;
 		/*begin*/
 		if (tmp->state != TASK_RUNNING) {
 			fprintk(3, "%ld\t%c\t%ld\n", tmp->pid, 'J', jiffies);
 		}
 		/*end*/
-
-		tmp->state = 0;
 	}
 }
 
@@ -246,17 +243,15 @@ void sleep_on(struct task_struct **p)
 void wake_up(struct task_struct **p)
 {
 	if (p && *p) {
-		/*唤醒最后进入等待队列的进程*/
-		if ((*p)->state != TASK_RUNNING) {
-			fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
-		}
-		/*end*/
-
 		if ((**p).state == TASK_STOPPED)
 			printk("wake_up: TASK_STOPPED");
 		if ((**p).state == TASK_ZOMBIE)
 			printk("wake_up: TASK_ZOMBIE");
 		(**p).state = 0;
+		/*唤醒最后进入等待队列的进程*/
+		if ((*p)->state != TASK_RUNNING)
+			fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
+		/*end*/
 	}
 }
 
