@@ -184,7 +184,7 @@ void schedule(void)
 int sys_pause(void)
 {
 	/*运行->可中断睡眠*/
-	if (current->state != 0) {
+	if (current->pid != 0) {
 		fprintk(3, "%ld\t%c\t%ld\n", current->pid, 'W', jiffies);
 	}
 	/*end*/
