@@ -210,8 +210,9 @@ repeat:	schedule();
 	if (*p = tmp)
 	{
 		tmp->state = 0;
-		fprintk(3, "%d\tJ\t%d\n", tmp->pid, jiffies);
-
+		if (tmp->state != TASK_RUNNING) {
+			fprintk(3, "%ld\t%c\t%ld\n", tmp->pid, 'J', jiffies);
+		}
 	}
 
 }
@@ -234,7 +235,8 @@ void wake_up(struct task_struct **p)
 		if ((**p).state == TASK_ZOMBIE)
 			printk("wake_up: TASK_ZOMBIE");
 		(**p).state = 0;
-		fprintk(3, "%d\tJ\t%d\n", (*p)->pid, jiffies);
+		if ((*p)->state != TASK_RUNNING)
+			fprintk(3, "%ld\t%c\t%ld\n", (*p)->pid, 'J', jiffies);
 	}
 }
 
